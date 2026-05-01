@@ -13,7 +13,7 @@ console.log('API Key status:', GROQ_API_KEY ? 'LOADED ✅' : 'MISSING ❌');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
 app.post('/api/generate', async (req, res) => {
   try {
@@ -59,7 +59,7 @@ app.post('/api/generate', async (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname,'index.html'));
 });
 
 app.listen(PORT, () => {
