@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BRD to Test Cases | AI QA Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header class="site-header">
+      <div class="header-badge">✦ AI-Powered Test Generation</div>
+      <h1 class="site-title">
+        <span class="title-icon">🧪</span> BRD to Test Cases
+      </h1>
+      <p class="site-sub">Generate positive & negative test scenarios from your requirements.</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="input">
+        <span class="tab-icon">📝</span> Requirement Input
+      </button>
+      <button class="tab-btn" id="results-tab-btn" data-tab="results" disabled>
+        <span class="tab-icon">📊</span> Test Results
+        <span class="tab-badge" id="result-count-badge" style="display:none;">0</span>
+      </button>
+    </nav>
+
+    <!-- Input Panel -->
+    <div class="tab-content" id="tab-input">
+      <div class="card">
+        <div class="card-label">Upload BRD Document</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileUpload').click()">
+          <div class="upload-icon">📁</div>
+          <p class="upload-text"><strong>Click to upload</strong> or drag and drop</p>
+          <p class="upload-sub">.TXT, .PDF, or .DOCX up to 10MB</p>
+        </div>
+        <input type="file" id="fileUpload" accept=".txt,.pdf,.docx" hidden>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Or Paste Requirements</div>
+        <textarea id="brdText" class="brd-textarea" placeholder="e.g. The system shall allow users to log in with an email and password. After 3 failed attempts, the account is locked for 15 minutes..."></textarea>
+        <div class="char-count" id="charCount">0 characters</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Test Case Types & Count</div>
+        <div class="type-grid">
+          <div class="type-card active" data-type="positive" style="--card-color: var(--green); --card-bg: rgba(34,211,160,.08); --card-glow: rgba(34,211,160,.15);">
+            <div class="type-card-header">
+              <span class="type-card-name">✅ Positive</span>
+              <div class="type-checkbox">✓</div>
+            </div>
+            <div class="type-count-row">
+              <input type="number" id="posCases" class="type-count-input" value="3" min="1" max="10">
+              <span class="type-count-label">test cases</span>
+            </div>
+          </div>
+          <div class="type-card active" data-type="negative" style="--card-color: var(--red); --card-bg: rgba(240,85,85,.08); --card-glow: rgba(240,85,85,.15);">
+            <div class="type-card-header">
+              <span class="type-card-name">❌ Negative</span>
+              <div class="type-checkbox">✓</div>
+            </div>
+            <div class="type-count-row">
+              <input type="number" id="negCases" class="type-count-input" value="3" min="1" max="10">
+              <span class="type-count-label">test cases</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="generateBtn" class="generate-btn" onclick="generateTestCases()">
+        <span>✨ Generate Test Cases</span>
+      </button>
+
+      <!-- Progress Box (hidden by default) -->
+      <div id="progressBox" class="progress-box" style="display:none;">
+        <div class="progress-label">Generating...</div>
+        <div class="progress-track">
+          <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+        </div>
+        <div class="progress-steps">
+          <div class="p-step active" id="step-parse">⏳ Parsing requirements...</div>
+          <div class="p-step" id="step-generate">⚙️ Generating test cases...</div>
+          <div class="p-step" id="step-format">📋 Formatting results...</div>
+        </div>
+      </div>
+
+      <!-- Error Box -->
+      <div id="errorBox" class="error-box" style="display:none;"></div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="tab-content" id="tab-results" style="display:none;">
+      <div class="stats-row" id="statsRow"></div>
+
+      <div class="results-controls">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search test cases..." oninput="filterTable()">
+        </div>
+        <span class="filter-count" id="filterCount"></span>
+        <div style="flex:1;"></div>
+        <button class="export-btn csv-btn" onclick="downloadCSV()">⬇ CSV</button>
+        <button class="export-btn json-btn" onclick="downloadJSON()">⬇ JSON</button>
+      </div>
+
+      <div class="table-scroll">
+        <table class="test-table" id="testCaseTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Scenario</th>
+              <th>Test Data</th>
+              <th>Expected Outcome</th>
+              <th>Comments</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <p class="table-hint">💡 Click on any cell to edit. Click the arrow to expand details.</p>
+
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">🧪</div>
+        <div class="empty-title">No test cases generated yet</div>
+        <div class="empty-sub">Enter requirements and click "Generate Test Cases"</div>
+        <button class="go-input-btn" onclick="switchTab('input')">📝 Go to Input</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
