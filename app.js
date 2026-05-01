@@ -145,7 +145,7 @@ Use IDs: TC-P01.. for positive, TC-N01.. for negative. NO extra text.`;
 
   try {
     updateProgress(1, 35);
-    const response = await fetch('http://localhost:3000/api/generate', {
+    const response = await fetch('http://192.168.1.105:3000/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
