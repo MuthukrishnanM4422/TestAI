@@ -6,7 +6,6 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// TEMPORARY: Hardcoded API key for testing
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
 
 console.log('API Key status:', GROQ_API_KEY ? 'LOADED ✅' : 'MISSING ❌');
@@ -59,9 +58,9 @@ app.post('/api/generate', async (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname,'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log('✅ Server running at https://your-app.onrender.com/api/generate:' + PORT);
+  console.log('✅ Server running on port:' + PORT);
 });
