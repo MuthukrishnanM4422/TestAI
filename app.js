@@ -18,12 +18,12 @@ const filterCount = document.getElementById('filterCount');
 const resultCountBadge = document.getElementById('result-count-badge');
 const resultsTabBtn = document.getElementById('results-tab-btn');
 
-// 🔴 SMART API URL - Works on both local and Render
-const API_URL = window.location.hostname === 'localhost' 
+// SMART API URL
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api/generate'
-  : window.location.origin + '/api/generate';
+  : '/api/generate';
 
-console.log('Using API URL:', API_URL);
+console.log('API URL:', API_URL);
 
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -123,43 +123,21 @@ async function generateTestCases() {
 
   if (posCases + negCases === 0) { showError('Select at least one test case type.'); return; }
 
-  // UI state
   generateBtn.disabled = true;
   generateBtn.innerHTML = '<span class="btn-spinner"></span> Generating...';
   progressBox.style.display = 'block';
   errorBox.style.display = 'none';
   updateProgress(0, 10);
 
-  const prompt = `You are a senior QA engineer. Generate test cases based on these requirements:
-
-"""
-${brdText}
-"""
-
-Create exactly ${posCases} POSITIVE and ${negCases} NEGATIVE test cases.
-Return ONLY a JSON array. Format:
-[
-  {
-    "id": "TC-P01",
-    "type": "Positive",
-    "scenario": "short description",
-    "testData": "inputs/preconditions",
-    "expectedOutcome": "expected result",
-    "comments": "notes"
-  }
-]
-Use IDs: TC-P01.. for positive, TC-N01.. for negative. NO extra text.`;
+  const prompt = 'You are a senior QA engineer. Generate test cases based on these requirements:\n\n"""\n' + brdText + '\n"""\n\nCreate exactly ' + posCases + ' POSITIVE and ' + negCases + ' NEGATIVE test cases.\nReturn ONLY a JSON array. Format:\n[\n  {\n    "id": "TC-P01",\n    "type": "Positive",\n    "scenario": "short description",\n    "testData": "inputs/preconditions",\n    "expectedOutcome": "expected result",\n    "comments": "notes"\n  }\n]\nUse IDs: TC-P01.. for positive, TC-N01.. for negative. NO extra text.';
 
   try {
     updateProgress(1, 35);
-    
-    // 🔴 USING SMART API URL HERE
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
     });
-    
     updateProgress(2, 70);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'API request failed');
@@ -186,16 +164,11 @@ Use IDs: TC-P01.. for positive, TC-N01.. for negative. NO extra text.`;
   }
 }
 
-// Display results
 function displayResults(cases) {
   const posCount = cases.filter(t => t.type === 'Positive').length;
   const negCount = cases.filter(t => t.type === 'Negative').length;
   
-  statsRow.innerHTML = `
-    <div class="stat-card" style="--stat-color: var(--accent);"><div class="stat-val">${cases.length}</div><div class="stat-label">Total TCs</div></div>
-    <div class="stat-card" style="--stat-color: var(--green);"><div class="stat-val">${posCount}</div><div class="stat-label">Positive</div></div>
-    <div class="stat-card" style="--stat-color: var(--red);"><div class="stat-val">${negCount}</div><div class="stat-label">Negative</div></div>
-  `;
+  statsRow.innerHTML = '<div class="stat-card" style="--stat-color: var(--accent);"><div class="stat-val">' + cases.length + '</div><div class="stat-label">Total TCs</div></div><div class="stat-card" style="--stat-color: var(--green);"><div class="stat-val">' + posCount + '</div><div class="stat-label">Positive</div></div><div class="stat-card" style="--stat-color: var(--red);"><div class="stat-val">' + negCount + '</div><div class="stat-label">Negative</div></div>';
 
   resultCountBadge.textContent = cases.length;
   resultCountBadge.style.display = 'inline';
@@ -203,29 +176,18 @@ function displayResults(cases) {
   emptyState.style.display = 'none';
   document.querySelector('.table-scroll').style.display = 'block';
   document.querySelector('.table-hint').style.display = 'block';
-  filterCount.textContent = `Showing ${cases.length} of ${cases.length}`;
+  filterCount.textContent = 'Showing ' + cases.length + ' of ' + cases.length;
 
   renderTable(cases);
   switchTab('results');
 }
 
-// Render table
 function renderTable(cases) {
   tableBody.innerHTML = cases.map((tc, idx) => {
     const badgeColor = tc.type === 'Positive' ? 'var(--green)' : 'var(--red)';
-    return `
-      <tr data-index="${idx}">
-        <td><span class="id-chip">${escapeHtml(tc.id)}</span></td>
-        <td><span class="type-badge" style="color:${badgeColor};border-color:${badgeColor}33;background:${badgeColor}11;">${tc.type}</span></td>
-        <td class="editable" data-field="scenario">${escapeHtml(tc.scenario)}</td>
-        <td class="editable" data-field="testData">${escapeHtml(tc.testData)}</td>
-        <td class="editable" data-field="expectedOutcome">${escapeHtml(tc.expectedOutcome)}</td>
-        <td class="editable" data-field="comments">${escapeHtml(tc.comments)}</td>
-        <td><button class="expand-row-btn" onclick="toggleExpand(${idx})">↗</button></td>
-      </tr>`;
+    return '<tr data-index="' + idx + '"><td><span class="id-chip">' + escapeHtml(tc.id) + '</span></td><td><span class="type-badge" style="color:' + badgeColor + ';border-color:' + badgeColor + '33;background:' + badgeColor + '11;">' + tc.type + '</span></td><td class="editable" data-field="scenario">' + escapeHtml(tc.scenario) + '</td><td class="editable" data-field="testData">' + escapeHtml(tc.testData) + '</td><td class="editable" data-field="expectedOutcome">' + escapeHtml(tc.expectedOutcome) + '</td><td class="editable" data-field="comments">' + escapeHtml(tc.comments) + '</td><td><button class="expand-row-btn" onclick="toggleExpand(' + idx + ')">↗</button></td></tr>';
   }).join('');
 
-  // Make cells editable
   document.querySelectorAll('.editable').forEach(cell => {
     cell.addEventListener('dblclick', function() {
       const current = this.textContent;
@@ -246,7 +208,6 @@ function renderTable(cases) {
   });
 }
 
-// Expand row
 function toggleExpand(idx) {
   const existing = document.querySelector('.expand-panel');
   if (existing) existing.remove();
@@ -254,25 +215,11 @@ function toggleExpand(idx) {
   const tc = testCases[idx];
   const panel = document.createElement('div');
   panel.className = 'expand-panel';
-  panel.innerHTML = `
-    <div class="expand-header">
-      <span>${tc.id} — Details</span>
-      <button class="expand-close" onclick="this.closest('.expand-panel').remove()">✕</button>
-    </div>
-    <div class="expand-grid">
-      <div><div class="expand-section-label">Test Data</div><div class="expand-body">${escapeHtml(tc.testData)}</div></div>
-      <div><div class="expand-section-label">Expected Outcome</div><div class="expand-body">${escapeHtml(tc.expectedOutcome)}</div></div>
-    </div>
-    <div class="expand-footer">
-      <span class="expand-meta">Type: ${tc.type} | ID: ${tc.id}</span>
-      <button class="del-btn" onclick="deleteTestCase(${idx})">🗑 Delete</button>
-    </div>
-  `;
-  const row = document.querySelector(`tr[data-index="${idx}"]`);
+  panel.innerHTML = '<div class="expand-header"><span>' + tc.id + ' — Details</span><button class="expand-close" onclick="this.closest(\'.expand-panel\').remove()">✕</button></div><div class="expand-grid"><div><div class="expand-section-label">Test Data</div><div class="expand-body">' + escapeHtml(tc.testData) + '</div></div><div><div class="expand-section-label">Expected Outcome</div><div class="expand-body">' + escapeHtml(tc.expectedOutcome) + '</div></div></div><div class="expand-footer"><span class="expand-meta">Type: ' + tc.type + ' | ID: ' + tc.id + '</span><button class="del-btn" onclick="deleteTestCase(' + idx + ')">🗑 Delete</button></div>';
+  const row = document.querySelector('tr[data-index="' + idx + '"]');
   row.after(panel);
 }
 
-// Delete test case
 function deleteTestCase(idx) {
   testCases.splice(idx, 1);
   if (testCases.length === 0) {
@@ -291,30 +238,27 @@ function deleteTestCase(idx) {
 function updateStats() {
   const posCount = testCases.filter(t => t.type === 'Positive').length;
   const negCount = testCases.filter(t => t.type === 'Negative').length;
-  statsRow.innerHTML = statsRow.innerHTML.replace(/>\d+</, `>${testCases.length}<`).replace(/>\d+</, `>${posCount}<`).replace(/>\d+</, `>${negCount}<`);
   resultCountBadge.textContent = testCases.length;
-  filterCount.textContent = `Showing ${testCases.length} of ${testCases.length}`;
+  filterCount.textContent = 'Showing ' + testCases.length + ' of ' + testCases.length;
 }
 
-// Search/Filter
 function filterTable() {
   const term = document.getElementById('searchInput').value.toLowerCase();
   const filtered = testCases.filter(tc => 
     Object.values(tc).some(v => String(v).toLowerCase().includes(term))
   );
   renderTable(filtered);
-  filterCount.textContent = term ? `Showing ${filtered.length} of ${testCases.length}` : `Showing ${testCases.length} of ${testCases.length}`;
+  filterCount.textContent = term ? 'Showing ' + filtered.length + ' of ' + testCases.length : 'Showing ' + testCases.length + ' of ' + testCases.length;
 }
 
-// Export
 function downloadCSV() {
   const header = ['ID','Type','Scenario','Test Data','Expected Outcome','Comments'];
   const rows = testCases.map(tc => [tc.id, tc.type, tc.scenario, tc.testData, tc.expectedOutcome, tc.comments]);
-  const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-  downloadFile(csv, `test_cases_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv');
+  const csv = [header, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+  downloadFile(csv, 'test_cases_' + new Date().toISOString().slice(0,10) + '.csv', 'text/csv');
 }
 function downloadJSON() {
-  downloadFile(JSON.stringify(testCases, null, 2), `test_cases_${new Date().toISOString().slice(0,10)}.json`, 'application/json');
+  downloadFile(JSON.stringify(testCases, null, 2), 'test_cases_' + new Date().toISOString().slice(0,10) + '.json', 'application/json');
 }
 function downloadFile(content, filename, type) {
   const blob = new Blob([content], { type });
@@ -324,7 +268,6 @@ function downloadFile(content, filename, type) {
   a.click();
 }
 
-// Helpers
 function showError(msg) {
   errorBox.textContent = '⚠️ ' + msg;
   errorBox.style.display = 'block';
