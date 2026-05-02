@@ -15,7 +15,6 @@
   <div class="bg-grid"></div>
 
   <div class="app-wrapper">
-    <!-- Header -->
     <header class="site-header">
       <div class="header-badge">✦ AI-Powered Test Generation</div>
       <h1 class="site-title">
@@ -24,7 +23,6 @@
       <p class="site-sub">Generate positive & negative test scenarios from your requirements.</p>
     </header>
 
-    <!-- Tab Navigation -->
     <nav class="tab-nav">
       <button class="tab-btn active" data-tab="input">
         <span class="tab-icon">📝</span> Requirement Input
@@ -35,7 +33,6 @@
       </button>
     </nav>
 
-    <!-- Input Panel -->
     <div class="tab-content" id="tab-input">
       <div class="card">
         <div class="card-label">Upload BRD Document</div>
@@ -83,7 +80,6 @@
         <span>✨ Generate Test Cases</span>
       </button>
 
-      <!-- Progress Box (hidden by default) -->
       <div id="progressBox" class="progress-box" style="display:none;">
         <div class="progress-label">Generating...</div>
         <div class="progress-track">
@@ -96,11 +92,9 @@
         </div>
       </div>
 
-      <!-- Error Box -->
       <div id="errorBox" class="error-box" style="display:none;"></div>
     </div>
 
-    <!-- Results Panel -->
     <div class="tab-content" id="tab-results" style="display:none;">
       <div class="stats-row" id="statsRow"></div>
 
@@ -115,7 +109,7 @@
         <button class="export-btn json-btn" onclick="downloadJSON()">⬇ JSON</button>
       </div>
 
-      <div class="table-scroll">
+      <div class="table-scroll" style="display:none;">
         <table class="test-table" id="testCaseTable">
           <thead>
             <tr>
