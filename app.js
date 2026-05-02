@@ -18,6 +18,13 @@ const filterCount = document.getElementById('filterCount');
 const resultCountBadge = document.getElementById('result-count-badge');
 const resultsTabBtn = document.getElementById('results-tab-btn');
 
+// 🔴 SMART API URL - Works on both local and Render
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000/api/generate'
+  : window.location.origin + '/api/generate';
+
+console.log('Using API URL:', API_URL);
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -145,11 +152,14 @@ Use IDs: TC-P01.. for positive, TC-N01.. for negative. NO extra text.`;
 
   try {
     updateProgress(1, 35);
-    const response = await fetch('https://your-app.onrender.com/api/generate', {
+    
+    // 🔴 USING SMART API URL HERE
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
     });
+    
     updateProgress(2, 70);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'API request failed');
